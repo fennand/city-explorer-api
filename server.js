@@ -1,27 +1,32 @@
-require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
-const PORT = process.env.PORT || 8080;
+require("dotenv").config();
 const app = express();
-const data = require("./Data/weather.json");
-
+const PORT = process.env.PORT || 8080;
 app.use(cors());
+const data = require("./data/weather.json");
 
-app.get("/", (req, res) => {
-  return res.json("Home page");
-});
+app.get("/", (_, response) => response.json("Root route."));
 
-app.get("/weather", (req, res) => {
-  const searchLat = req.query.lat;
-  const searchLon = req.query.lon;
+app.get("/weather", (request, response) => {
+  const lat = request.query.lat;
+  const lon = request.query.lon;
+  const searchQuery = request.query.searchQuery;
 
-  const weatherFilter = data.filter((city) => {
-    console.log(city.lat);
-    return searchLat === city.lat && searchLon === city.lon;
+  const filteredCity = data.find((city) => {
+    return (
+      city.city_name === searchQuery //&& city.lat === lat && city.lon === lon
+    );
   });
 
-  console.log(weatherFilter);
+  const wrangledData = filteredCity.data.map((day) => {
+    return {
+      description: day.weather.description,
+      date: day.datetime,
+    };
+  });
+
+  response.json(wrangledData);
 });
 
 app.listen(PORT, () => console.log(`App is running in PORT: ${PORT}`));
